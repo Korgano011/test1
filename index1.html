@@ -54,7 +54,7 @@ required
 >
 
 <label>Email</label>
-<input type="email" 
+<input type="email"
 id="email"
 name = "email"
 required
@@ -77,6 +77,18 @@ title="Please enter a valid email"
 
 const API_URL =
 "https://zex9c3vq53.execute-api.us-east-1.amazonaws.com/default/dynamoDiscount";
+
+const phoneMaskInput = document.getElementById("phone");
+phoneMaskInput.addEventListener("input", () => {
+    const digits = phoneMaskInput.value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length > 6) {
+        phoneMaskInput.value = digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6);
+    } else if (digits.length > 3) {
+        phoneMaskInput.value = digits.slice(0, 3) + "-" + digits.slice(3);
+    } else {
+        phoneMaskInput.value = digits;
+    }
+});
 
 async function saveRecord(){
 
@@ -137,7 +149,7 @@ try {
 
 // Clear the fields when submitted
 
-if (result.Status === "SUCCEEDED" || result.status === "SUCCEEDED") {
+if (result.Status === "Success" || result.status === "Success") {
 document.getElementById("name").value = "";
 document.getElementById("address").value = "";
 document.getElementById("phone").value = "";
