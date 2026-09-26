@@ -4,6 +4,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Public Practice</title>
 
+<!-- jsPDF builds the PDF in the browser; autotable draws the records table -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <style>
 body{
     font-family: Arial, Helvetica, sans-serif;
@@ -29,6 +33,10 @@ button{
     padding:10px 20px;
     font-size:16px;
     cursor:pointer;
+}
+
+button:disabled{
+    cursor:not-allowed;
 }
 
 #result, #recordsStatus{
@@ -83,6 +91,7 @@ th{
 
 <input type="text" id="search" placeholder="Search name or description">
 <button onclick="loadRecords()">Search</button>
+<button id="pdfButton" onclick="savePdf()" disabled>Save as PDF</button>
 
 <div id="recordsStatus"></div>
 
@@ -100,6 +109,11 @@ th{
 
 const API_URL =
 "https://a30le4we7h.execute-api.us-east-1.amazonaws.com/default/lambdaTest";
+
+// The records (and search term) from the last successful fetch,
+// so the PDF matches exactly what is shown on the page
+let lastRecords = [];
+let lastSearch = "";
 
 async function saveRecord(){
 
@@ -155,8 +169,10 @@ async function loadRecords(){
     const search = document.getElementById("search").value.trim();
     const statusDiv = document.getElementById("recordsStatus");
     const tbody = document.querySelector("#records tbody");
+    const pdfButton = document.getElementById("pdfButton");
 
     statusDiv.innerHTML = "Loading...";
+    pdfButton.disabled = true;
 
     try {
 
@@ -189,6 +205,11 @@ async function loadRecords(){
         }
 
         statusDiv.innerHTML = result.records.length + " record(s) found";
+
+        // Remember what was fetched so it can be saved as a PDF
+        lastRecords = result.records;
+        lastSearch = search;
+        pdfButton.disabled = lastRecords.length === 0;
 
     } catch (error) {
 
@@ -246,7 +267,6 @@ function savePdf(){
     }
 }
 
-
 // Load the records when the page opens
 loadRecords();
 
@@ -254,4 +274,3 @@ loadRecords();
 <a href="https://main.d859ji0i28ik.amplifyapp.com/">Return to home page</a>
 </body>
 </html>
-
