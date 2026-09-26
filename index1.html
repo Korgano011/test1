@@ -1,0 +1,206 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public Practice</title>
+
+<style>
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    width:600px;
+    margin:40px auto;
+}
+
+a{
+    display:block;
+    margin-top:20px;
+    color:blue;
+    font-size:18px;
+}
+
+input{
+    width:50%;
+    padding:10px;
+    margin-bottom:10px;
+    font-size:16px;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+#result, #recordsStatus{
+    margin-top:20px;
+    font-weight:bold;
+}
+
+hr{
+    margin:30px 0;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    background:#ffffff;
+}
+
+th, td{
+    border:1px solid #b2bec3;
+    padding:8px;
+    text-align:left;
+    vertical-align:top;
+}
+
+th{
+    background:#b2bec3;
+}
+</style>
+</head>
+<body bgcolor="#dfe6e9">
+
+<h2>Practice Public Table</h2>
+
+<label>Name</label>
+<br>
+<input type="text" id="name">
+<br>
+
+<label>Description</label>
+<br>
+<input type="text" id="desc">
+<br>
+
+<button onclick="saveRecord()">Submit</button>
+
+<div id="result"></div>
+
+<hr>
+
+<h2>Records</h2>
+
+<input type="text" id="search" placeholder="Search name or description">
+<button onclick="loadRecords()">Search</button>
+
+<div id="recordsStatus"></div>
+
+<table id="records">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+
+const API_URL =
+"https://a30le4we7h.execute-api.us-east-1.amazonaws.com/default/lambdaTest";
+
+async function saveRecord(){
+
+    const name = document.getElementById("name").value.trim();
+    const desc = document.getElementById("desc").value.trim();
+    const resultDiv = document.getElementById("result");
+
+    // Make sure both fields contain data
+    if (!name || !desc) {
+        resultDiv.innerHTML = "Please enter both a name and description.";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                description: desc
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to save record");
+        }
+
+        resultDiv.innerHTML = "Status: " + result.Status;
+
+        // Clear the fields if the save was successful
+        document.getElementById("name").value = "";
+        document.getElementById("desc").value = "";
+
+        document.getElementById("name").focus();
+
+        // Refresh the table so the new record shows up
+        loadRecords();
+
+    } catch (error) {
+
+        console.error(error);
+        resultDiv.innerHTML = "Error: " + error.message;
+    }
+}
+
+async function loadRecords(){
+
+    const search = document.getElementById("search").value.trim();
+    const statusDiv = document.getElementById("recordsStatus");
+    const tbody = document.querySelector("#records tbody");
+
+    statusDiv.innerHTML = "Loading...";
+
+    try {
+
+        const url = search
+            ? API_URL + "?search=" + encodeURIComponent(search)
+            : API_URL;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to load records");
+        }
+
+        tbody.innerHTML = "";
+
+        // Use textContent (not innerHTML) so user-entered text can't inject HTML
+        for (const record of result.records) {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = record.name;
+
+            const descCell = document.createElement("td");
+            descCell.textContent = record.description;
+
+            row.appendChild(nameCell);
+            row.appendChild(descCell);
+            tbody.appendChild(row);
+        }
+
+        statusDiv.innerHTML = result.records.length + " record(s) found";
+
+    } catch (error) {
+
+        console.error(error);
+        statusDiv.innerHTML = "Error: " + error.message;
+    }
+}
+
+// Load the records when the page opens
+loadRecords();
+
+</script>
+</body>
+</html>
+
