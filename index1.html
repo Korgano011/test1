@@ -197,6 +197,56 @@ async function loadRecords(){
     }
 }
 
+function savePdf(){
+
+    const statusDiv = document.getElementById("recordsStatus");
+
+    if (lastRecords.length === 0) {
+        statusDiv.innerHTML = "There are no records to save.";
+        return;
+    }
+
+    try {
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const now = new Date();
+
+        // Heading
+        doc.setFontSize(16);
+        doc.text("Practice Public Table - Records", 14, 18);
+
+        doc.setFontSize(10);
+        doc.text("Created: " + now.toLocaleString(), 14, 26);
+        doc.text("Search: " + (lastSearch || "(all records)"), 14, 32);
+        doc.text(lastRecords.length + " record(s)", 14, 38);
+
+        // Records table (wraps long text and adds pages automatically)
+        doc.autoTable({
+            startY: 44,
+            head: [["Name", "Description"]],
+            body: lastRecords.map(record => [record.name, record.description]),
+            styles: { fontSize: 10, cellPadding: 3, overflow: "linebreak" },
+            headStyles: { fillColor: [178, 190, 195], textColor: 0 },
+            columnStyles: { 0: { cellWidth: 50 } }
+        });
+
+        // File name like public_practice_2026-09-26.pdf
+        const fileDate = now.getFullYear() + "-"
+            + String(now.getMonth() + 1).padStart(2, "0") + "-"
+            + String(now.getDate()).padStart(2, "0");
+
+        doc.save("public_practice_" + fileDate + ".pdf");
+
+    } catch (error) {
+
+        console.error(error);
+        statusDiv.innerHTML = "Error creating PDF: " + error.message;
+    }
+}
+
+
 // Load the records when the page opens
 loadRecords();
 
