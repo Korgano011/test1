@@ -1,0 +1,6 @@
+create table christmas_lists (
+name text,
+item text primary key);
+
+insert into christmas_lists (name, item)
+values ('Person Name', 'Item name');
