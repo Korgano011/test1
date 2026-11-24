@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to add an App Clip</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         max-width: 760px; margin: 2em auto; padding: 0 1em; line-height: 1.6; color: #222; }
+  h1 { border-bottom: 2px solid #ddd; padding-bottom: .3em; }
+  h2 { margin-top: 1.8em; }
+  li { margin-bottom: .4em; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 4px; font-size: .9em; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>How to add an App Clip to a Build</h1>
+
+<h2>1. Have the demo video show what the app does</h2>
+<ul>
+<li>Give the demo video a name.</li>
+<li>Add the demo video to the project folder.</li>
+<li>Keep the demo video small. The whole App Clip must be 15 MB or below.</li>
+</ul>
+
+<h2>2. Add the App Clip target in Xcode</h2>
+<ul>
+<li>File ▸ New ▸ Target… ▸ iOS ▸ App Clip ▸ Next.</li>
+<li>Product Name: &lt;clip name&gt; &bull; Team: &lt;team number&gt; &bull; Interface: SwiftUI &bull; Embed in Application: &lt;app name&gt;</li>
+<li>The bundle ID must begin with the app’s ID: <code>com.username.AppName.Clip</code></li>
+<li>Click “Activate” when Xcode asks about the new scheme.</li>
+<li>Check that the app target ▸ Build Phases now has <strong>Embed App Clips</strong> containing <code>&lt;clip name&gt;.app</code>.</li>
+<li>Don’t set the clip’s deployment target higher than the app’s.</li>
+<li>Set the App Clip’s version. Make sure it matches the app version.</li>
+</ul>
+
+<h2>3. Clip code and files</h2>
+<ul>
+<li><code>&lt;Clip Folder&gt;/&lt;ClipName&gt;App.swift</code>: the <code>@main</code> app that shows the demo view.</li>
+<li><code>&lt;DemoView&gt;.swift</code>: the view that plays the demo video.</li>
+<li>Give the demo view file membership in both targets, or copy it into the clip folder.</li>
+<li>Copy the demo video (for example <code>&lt;demo video&gt;.mp4</code>) into the clip folder. Copy it; don’t move it.
+Then check Target Membership in the File inspector: the clip only.</li>
+<li>Don’t put the demo video in the app’s folder unless the full app should ship it too.</li>
+<li>Add an App Clip icon for the App Clip target.</li>
+</ul>
+
+<h2>4. Entitlements, Info.plist and privacy</h2>
+<ul>
+<li>App entitlements:<br>
+<code>com.apple.developer.associated-appclip-app-identifiers = $(AppIdentifierPrefix)com.username.AppName.Clip</code><br>
+Xcode usually adds this itself; check that it’s there.</li>
+<li>Clip entitlements:<br>
+<code>com.apple.developer.parent-application-identifiers = $(AppIdentifierPrefix)com.username.AppName</code><br>
+The template also adds <code>com.apple.developer.on-demand-install-capable</code>.</li>
+<li>Clip Info: set <code>ITSAppUsesNonExemptEncryption = NO</code> (the same <code>INFOPLIST_KEY</code> setting as the app).</li>
+<li>Add <code>PrivacyInfo.xcprivacy</code> to the clip folder. If the clip only plays video, it collects no data and needs no
+required-reason APIs (add UserDefaults <code>CA92.1</code> only if the clip uses it).</li>
+<li>The clip needs no camera, microphone, speech or photo usage strings. If Xcode lists any for the clip target, remove them.</li>
+</ul>
+
+<h2>5. Size check</h2>
+<ul>
+<li>Product ▸ Archive, then Distribute ▸ Custom ▸ App Store Connect ▸ Export, and turn on the App Thinning size report.</li>
+<li>Keep the clip’s uncompressed thinned size under <strong>15 MB</strong> so it works with every type of invocation.</li>
+</ul>
+
+<h2>6. Build and test</h2>
+<ul>
+<li>Choose the &lt;clip name&gt; scheme, run it on an iPhone simulator, and check that the video plays and the Get button shows the overlay.</li>
+<li>Optional: in the scheme’s Run ▸ Arguments, set the environment variable
+<code>_XCAppClipURL = https://appclip.apple.com/id?p=com.username.AppName.Clip</code> to test a launch from a link.</li>
+<li>Choose the &lt;app name&gt; scheme and build Release for iOS, which also builds the clip. Check that there are no errors.</li>
+<li>Run it on your real iPhone with both schemes. Automatic signing registers the clip’s bundle ID and profile.</li>
+<li>Deleting the clip from the phone must not delete the full app, and the full app should still work as before.</li>
+</ul>
+
+<h2>7. Archive and upload</h2>
+<ul>
+<li>Product ▸ Archive with the &lt;app name&gt; scheme. In Organizer, check that the archive contains
+<code>Products/…/&lt;app name&gt;.app/AppClips/&lt;clip name&gt;.app</code>.</li>
+<li>Distribute App ▸ App Store Connect ▸ Upload, then wait for the processing email.</li>
+<li>Optional: test the clip in TestFlight. App Store Connect ▸ TestFlight ▸ build ▸ App Clip ▸ add an invocation URL.</li>
+</ul>
+
+<h2>8. App Store Connect – App Clip experience</h2>
+<ul>
+<li>On the version page, select the new build. An <strong>App Clip</strong> section appears below it.</li>
+<li>Header image: 1800 × 1200 px PNG or JPG, no transparency (for example, a frame from the demo video with the app name).</li>
+<li>Subtitle (up to 56 characters), for example: “See what the app does before you download.”</li>
+<li>Action: <strong>View</strong> (or Open / Play).</li>
+<li>Use the Default App Clip Experience only. Advanced experiences (your own website URL, NFC or QR codes) need an
+<code>apple-app-site-association</code> file and can wait.</li>
+<li>Add a line to the App Review notes, for example: “Includes an App Clip (&lt;clip name&gt;) that plays a demo video and
+links to the full app.” Keep the notes under 4,000 characters.</li>
+</ul>
+
+<h2>9. Submit</h2>
+<ul>
+<li>App Privacy answers stay “Data Not Collected” if the clip collects nothing.</li>
+<li>Add for Review ▸ Submit.</li>
+<li>After approval, check that the default App Clip link opens the clip on a phone that doesn’t have the app installed.</li>
+</ul>
+</body>
+</html>
